@@ -11,11 +11,6 @@ pipeline {
 
 	stages {
 
-		stage('Checkout') {
-			steps {
-				git 'https://github.com/Raheedilliwar/microservice-jenkins.git'
-			} 
-	} 
 		stage('Build') {
 			steps {
 				sh './mvnw clean package -DskipTests'
