@@ -5,7 +5,7 @@ pipeline {
 
         APP_NAME = 'spring-petclinic'
         AWS_USER = 'ec2-user'
-        EC2_IP = '3.83.121.46'
+        EC2_IP = '3.83.254.103'
         PEM_KEY = 'ec2-ssh-key'
     }
 
@@ -15,30 +15,30 @@ pipeline {
             steps {
                 sh 'chmod +x mvnw'
                 sh './mvnw clean package -DskipTests'
+            }
         }
-    }
 
-    stage('Docker Build & Push') {
-        steps {
-            script {
-                sh '''
+        stage('Docker Build & Push') {
+            steps {
+                script {
+                    sh '''
                     unset DOCKER_CERT_PATH
                     unset DOCKER_TLS_VERIFY
                     unset DOCKER_HOST
                     docker build -t spring-petclinic:7 .
                 '''
-                dockerImage = docker.build("${APP_NAME}:${BUILD_NUMBER}")
-                withDockerRegistry([credentialsId: 'dockerhub-creds', url: '']) {
-            dockerImage.push("${BUILD_NUMBER}")
-            dockerImage.push("latest")
-          }
-     }
-    }
-}
-    stage('Deploy to EC2') {
-    steps {
-        sshagent(['ec2-ssh-key']) {
-            sh """
+                    dockerImage = docker.build("${APP_NAME}:${BUILD_NUMBER}")
+                    withDockerRegistry([credentialsId: 'dockerhub-creds', url: '']) {
+                        dockerImage.push("${BUILD_NUMBER}")
+                        dockerImage.push("latest")
+                    }
+                }
+            }
+        }
+        stage('Deploy to EC2') {
+            steps {
+                sshagent(['ec2-ssh-key']) {
+                    sh """
                 scp -o StrictHostKeyChecking=no docker-compose.yml ${AWS_USER}@${EC2_IP}:/home/${AWS_USER}/
 
                 ssh -o StrictHostKeyChecking=no ${AWS_USER}@${EC2_IP} '
@@ -48,9 +48,9 @@ pipeline {
                     docker run -d --name ${APP_NAME} -p 8080:8080 your-dockerhub-username/${APP_NAME}:latest
                 '
             """
+                }
+            }
         }
-    }
-}
 
     }
 }
