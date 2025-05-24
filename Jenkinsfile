@@ -36,17 +36,21 @@ pipeline {
     }
 }
     stage('Deploy to EC2') {
-        steps {
+    steps {
+        sshagent(['ec2-ssh-key']) {
             sh """
-                scp -i ~/.ssh/${PEM_KEY} docker-compose.yml ${AWS_USER}@${EC2_IP}:/home/${AWS_USER}/
-          ssh -i ~/.ssh/${PEM_KEY} ${AWS_USER}@${EC2_IP} '
-            docker pull your-dockerhub-username/${APP_NAME}:latest &&
-            docker stop ${APP_NAME} || true &&
-            docker rm ${APP_NAME} || true &&
-            docker run -d --name ${APP_NAME} -p 8080:8080 your-dockerhub-username/${APP_NAME}:latest
-          '
-        """
-      }
+                scp -o StrictHostKeyChecking=no docker-compose.yml ${AWS_USER}@${EC2_IP}:/home/${AWS_USER}/
+
+                ssh -o StrictHostKeyChecking=no ${AWS_USER}@${EC2_IP} '
+                    docker pull your-dockerhub-username/${APP_NAME}:latest &&
+                    docker stop ${APP_NAME} || true &&
+                    docker rm ${APP_NAME} || true &&
+                    docker run -d --name ${APP_NAME} -p 8080:8080 your-dockerhub-username/${APP_NAME}:latest
+                '
+            """
+        }
     }
+}
+
     }
 }
