@@ -6,14 +6,14 @@ pipeline {
 		APP_NAME = 'spring-petclinic'
 		AWS_USER = 'ec2-user'
 		EC2-IP = '3.83.121.46'
-		PEM_KEY = 'app-server.pem'
+		PEM_KEY = 'ec2-ssh-key'
 	}
 
 	stages {
 
 		stage('Checkout') {
 			steps {
-				git 'https://github.com/Raheedilliwar/microservice_jenkins.git'
+				git 'https://github.com/Raheedilliwar/microservice-jenkins.git'
 			} 
 	} 
 		stage('Build') {
@@ -46,3 +46,5 @@ pipeline {
         """
       }
     }
+	}
+}
