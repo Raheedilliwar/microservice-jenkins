@@ -25,7 +25,7 @@ pipeline {
                 sshagent(['ec2-ssh-key']) {
                     sh """
                     scp -o StrictHostKeyChecking=no target/spring-petclinic-3.4.0-SNAPSHOT.jar ${EC2_USER}@${EC2_HOST}:/home/${EC2_USER}/spring-petclinic-3.4.0-SNAPSHOT.jar
-                    ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} 'nohup java -jar /home/${EC2_USER}/app.jar > app.log 2>&1 &'
+                    ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} 'nohup java -jar /home/${EC2_USER}/spring-petclinic-3.4.0-SNAPSHOT.jar > app.log 2>&1 &'
                     """
                 }
             }
