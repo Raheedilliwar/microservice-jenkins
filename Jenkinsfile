@@ -1,56 +1,34 @@
+/* groovylint-disable LineLength */
 pipeline {
     agent any
 
     environment {
-
-        APP_NAME = 'spring-petclinic'
-        AWS_USER = 'ec2-user'
-        EC2_IP = '3.83.254.103'
-        PEM_KEY = 'ec2-ssh-key'
+        EC2_USER = 'ec2-user'  // or 'ubuntu' based on your AMI
+        EC2_HOST = '35.172.129.157'
     }
 
     stages {
-
-        stage('Build') {
+        stage('Clone Repository') {
             steps {
-                sh 'chmod +x mvnw'
-                sh './mvnw clean package -DskipTests'
+                git url: 'https://github.com/Raheedilliwar/microservice-jenkins.git', branch: 'main'
             }
         }
 
-        stage('Docker Build & Push') {
+        stage('Build Application') {
             steps {
-                script {
-                    sh '''
-                    unset DOCKER_CERT_PATH
-                    unset DOCKER_TLS_VERIFY
-                    unset DOCKER_HOST
-                    docker build -t spring-petclinic:7 .
-                '''
-                    dockerImage = docker.build("${APP_NAME}:${BUILD_NUMBER}")
-                    withDockerRegistry([credentialsId: 'dockerhub-creds', url: '']) {
-                        dockerImage.push("${BUILD_NUMBER}")
-                        dockerImage.push("latest")
-                    }
-                }
+                sh 'mvn clean package' // Change based on your tech stack
             }
         }
+
         stage('Deploy to EC2') {
             steps {
-                sshagent(['ec2-ssh-key']) {
+                sshagent(['your-ec2-ssh-key-id']) {
                     sh """
-                scp -o StrictHostKeyChecking=no docker-compose.yml ${AWS_USER}@${EC2_IP}:/home/${AWS_USER}/
-
-                ssh -o StrictHostKeyChecking=no ${AWS_USER}@${EC2_IP} '
-                    docker pull your-dockerhub-username/${APP_NAME}:latest &&
-                    docker stop ${APP_NAME} || true &&
-                    docker rm ${APP_NAME} || true &&
-                    docker run -d --name ${APP_NAME} -p 8080:8080 your-dockerhub-username/${APP_NAME}:latest
-                '
-            """
+                    scp -o StrictHostKeyChecking=no target/your-app.jar ${EC2_USER}@${EC2_HOST}:/home/${EC2_USER}/app.jar
+                    ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} 'nohup java -jar /home/${EC2_USER}/app.jar > app.log 2>&1 &'
+                    """
                 }
             }
         }
-
     }
 }
