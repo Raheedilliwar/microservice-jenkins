@@ -22,9 +22,9 @@ pipeline {
 
         stage('Deploy to EC2') {
             steps {
-                sshagent(['your-ec2-ssh-key-id']) {
+                sshagent(['ec2-ssh-key']) {
                     sh """
-                    scp -o StrictHostKeyChecking=no target/your-app.jar ${EC2_USER}@${EC2_HOST}:/home/${EC2_USER}/app.jar
+                    scp -o StrictHostKeyChecking=no target/app.jar ${EC2_USER}@${EC2_HOST}:/home/${EC2_USER}/app.jar
                     ssh -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} 'nohup java -jar /home/${EC2_USER}/app.jar > app.log 2>&1 &'
                     """
                 }
